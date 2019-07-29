@@ -14,4 +14,3 @@ script:
   
   - export PYTHONPATH='.' 
   - pytest --cov=dynamical_population_models
-  - codeclimate-test-reporter --file .coverage
