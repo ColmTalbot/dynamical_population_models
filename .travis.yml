@@ -1,0 +1,17 @@
+language: python
+
+python:
+  - "3.6"
+  - "3.7"
+
+cache: pip
+
+install:
+  - pip install "coverage<4.4" "pytest-cov<2.5" codeclimate-test-reporter
+  - pip install .
+
+script:
+  
+  - export PYTHONPATH='.' 
+  - pytest --cov=dynamical_population_models
+  - codeclimate-test-reporter --file .coverage
