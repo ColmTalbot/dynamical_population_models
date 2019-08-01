@@ -78,7 +78,7 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     second_generation_mass = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
-        beta=beta * 2,
+        beta=beta * 4,
         mmin=mmin * 2,
         mmax=mmax * 2,
         lam=lam,
@@ -88,14 +88,14 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
 
     first_generation_spin = (dataset["a_1"] == 0) & (dataset["a_2"] == 0)
 
-    alpha, beta = mu_chi_var_chi_max_to_alpha_beta_max(
+    alpha_chi, beta_chi = mu_chi_var_chi_max_to_alpha_beta_max(
         mu_chi=mu_chi, var_chi=var_chi, amax=1
     )
     one_point_five_generation_spin = beta_dist(
-        dataset["a_1"], scale=1, alpha=alpha, beta=beta
+        dataset["a_1"], scale=1, alpha=alpha_chi, beta=beta_chi
     ) * (dataset["a_2"] == 0)
     second_generation_spin = iid_spin_magnitude_beta(
-        dataset=dataset, alpha_chi=alpha, beta_chi=beta, amax=1
+        dataset=dataset, alpha_chi=alpha_chi, beta_chi=beta_chi, amax=1
     )
 
     return (
@@ -176,7 +176,7 @@ def two_component_primary_mass_ratio_dynamical(
     second_generation = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
-        beta=beta * 2,
+        beta=beta * 4,
         mmin=mmin * 2,
         mmax=mmax * 2,
         lam=lam,
