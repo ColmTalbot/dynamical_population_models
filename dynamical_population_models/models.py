@@ -146,6 +146,8 @@ class BigModel(object):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
+            alpha_chi=alpha_chi,
+            beta_chi=beta_chi,
             branch_1=2 / 3 * branching_fraction,
             branch_2=branching_fraction**2 / 4
         )
