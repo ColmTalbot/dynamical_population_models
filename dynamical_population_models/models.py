@@ -126,7 +126,7 @@ class BigModel(object):
         self.mass_ratio = xp.asarray(branching_dataset["mass_ratio"])
         self.retention_fraction = xp.asarray(
             branching_dataset["interpolated_retention_fraction"])
-        self.mass_1s = xp.linspace(3, 50, 100)
+        self.mass_1s = xp.linspace(2, 100, 1000)
         self.mass_ratio_grid, self.mass_1_grid = xp.meshgrid(
             self.mass_ratio, self.mass_1s)
         self.first_generation_data = dict(
