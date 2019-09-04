@@ -134,7 +134,8 @@ class BigModel(object):
     def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
                  alpha_chi, beta_chi):
         branching_fraction = self.compute_branching_fraction(
-            alpha_chi=alpha_chi, beta_chi=beta_chi
+            alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
+            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi
         )
         return two_component_primary_mass_ratio_dynamical_with_spins(
             dataset=dataset,
