@@ -122,9 +122,10 @@ class BigModel(object):
 
     def __init__(self, branching_dataset):
         self.branching_dataset = branching_dataset
-        self.a_1 = xp.unique(self.branching_dataset["a_1"])
-        self.a_2 = xp.unique(self.branching_dataset["a_2"])
-        self.mass_ratio = xp.unique(self.branching_dataset["mass_ratio"])
+        self.a_1 = self.branching_dataset["a_1"]
+        self.a_2 = self.branching_dataset["a_2"]
+        self.mass_ratio = self.branching_dataset["mass_ratio"]
+        self.retention_fraction = self.branching_dataset["interpolated_retention_fraction"]
         self.mass_1s = xp.linspace(3, 50, 100)
         self.mass_ratio_grid, self.mass_1_grid = xp.meshgrid(
             self.mass_ratio, self.mass_1s)
@@ -167,7 +168,7 @@ class BigModel(object):
                 alpha=alpha_chi, beta=beta_chi, a_max=a_max)
         )
         branching_fraction = trapz(trapz(trapz(
-            probability * self.branching_dataset["interpolated_retention_fraction"],
+            probability * self.retention_fraction,
             self.mass_ratio), self.a_2), self.a_1)
         return branching_fraction
 
