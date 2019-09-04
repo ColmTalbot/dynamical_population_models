@@ -19,10 +19,10 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     lam,
     mpp,
     sigpp,
+    alpha_chi,
+    beta_chi,
     branch_1=0.12,
     branch_2=0.01,
-    alpha_chi=0.67,
-    beta_chi=0.01,
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
