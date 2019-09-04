@@ -154,6 +154,18 @@ class BigModel(object):
 
     def compute_branching_fraction(self, alpha, beta, mmin, mmax, lam, mpp,
                                    sigpp, alpha_chi, beta_chi, a_max=1):
+        probability = xp.einsum(
+            "i,j,k->ijk",
+            self.first_generation_mass_ratio(
+                alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
+                sigpp=sigpp),
+            first_generation_spin_magnitude(
+                self.branching_dataset["a_1"],
+                alpha=alpha_chi, beta=beta_chi, a_max=a_max),
+            first_generation_spin_magnitude(
+                self.branching_dataset["a_2"],
+                alpha=alpha_chi, beta=beta_chi, a_max=a_max)
+        )
         probability = (
             self.first_generation_mass_ratio(
                 alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
@@ -174,16 +186,10 @@ class BigModel(object):
             self, alpha, beta, mmin, mmax, lam, mpp, sigpp):
         first_generation_mass = two_component_primary_mass_ratio(
             dataset=self.first_generation_data,
-            alpha=alpha,
-            beta=beta,
-            mmin=mmin,
-            mmax=mmax,
-            lam=lam,
-            mpp=mpp,
+            alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
             sigpp=sigpp,
         )
-        first_generation_mass_ratio = trapz(first_generation_mass, self.mass_1s)
-        return xp.atleast_3d(first_generation_mass_ratio)
+        return trapz(first_generation_mass, self.mass_1s)
 
 
 def first_generation_spin_magnitude(spin, alpha, beta, a_max):
