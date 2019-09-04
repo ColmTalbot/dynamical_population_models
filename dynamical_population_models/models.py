@@ -1,5 +1,8 @@
+import numpy as np
+
 from gwpopulation.conversions import mu_chi_var_chi_max_to_alpha_beta_max
 from gwpopulation.utils import beta_dist, powerlaw
+from gwpopulation.cupy_utils import trapz, xp
 from gwpopulation.models.mass import (
     two_component_primary_mass_ratio,
     two_component_single,
@@ -18,8 +21,8 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     sigpp,
     branch_1=0.12,
     branch_2=0.01,
-    mu_chi=0.67,
-    var_chi=0.01,
+    alpha_chi=0.67,
+    beta_chi=0.01,
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
@@ -86,16 +89,24 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
         sigpp=sigpp * 2,
     )
 
-    first_generation_spin = (dataset["a_1"] == 0) & (dataset["a_2"] == 0)
-
-    alpha_chi, beta_chi = mu_chi_var_chi_max_to_alpha_beta_max(
-        mu_chi=mu_chi, var_chi=var_chi, amax=1
+    first_generation_spin = (
+            first_generation_spin_magnitude(
+                dataset["a_1"], alpha=alpha_chi, beta=beta_chi, a_max=1) *
+            first_generation_spin_magnitude(
+                dataset["a_2"], alpha=alpha_chi, beta=beta_chi, a_max=1)
     )
+
+    alpha_2g, beta_2g = mu_chi_var_chi_max_to_alpha_beta_max(
+        mu_chi=0.67, var_chi=0.1, amax=1
+    )
+
     one_point_five_generation_spin = beta_dist(
-        dataset["a_1"], scale=1, alpha=alpha_chi, beta=beta_chi
-    ) * (dataset["a_2"] == 0)
+        dataset["a_1"], scale=1, alpha=alpha_2g, beta=beta_2g
+    ) * first_generation_spin_magnitude(
+        dataset["a_2"], alpha=alpha_chi, beta=beta_chi, a_max=1)
+
     second_generation_spin = iid_spin_magnitude_beta(
-        dataset=dataset, alpha_chi=alpha_chi, beta_chi=beta_chi, amax=1
+        dataset=dataset, alpha_chi=alpha_2g, beta_chi=beta_2g, amax=1
     )
 
     return (
@@ -104,6 +115,80 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
         * one_point_five_generation_mass
         * one_point_five_generation_spin
         + branch_2 * second_generation_mass * second_generation_spin
+    )
+
+
+class BigModel(object):
+
+    def __init__(self, branching_dataset):
+        self.branching_dataset = branching_dataset
+        self.a_1 = xp.unique(self.branching_dataset["a_1"])
+        self.a_2 = xp.unique(self.branching_dataset["a_2"])
+        self.mass_ratio = xp.unique(self.branching_dataset["mass_ratio"])
+        self.mass_1s = xp.linspace(3, 50, 100)
+        self.mass_ratio_grid, self.mass_1_grid = xp.meshgrid(
+            self.mass_ratio, self.mass_1s)
+        self.first_generation_data = dict(
+            mass_1=self.mass_1_grid, mass_ratio=self.mass_ratio_grid)
+
+    def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
+                 alpha_chi, beta_chi):
+        branching_fraction = self.compute_branching_fraction(
+            alpha_chi=alpha_chi, beta_chi=beta_chi
+        )
+        return two_component_primary_mass_ratio_dynamical_with_spins(
+            dataset=dataset,
+            alpha=alpha,
+            beta=beta,
+            mmin=mmin,
+            mmax=mmax,
+            lam=lam,
+            mpp=mpp,
+            sigpp=sigpp,
+            branch_1=2 / 3 * branching_fraction,
+            branch_2=branching_fraction**2 / 4
+        )
+
+    def compute_branching_fraction(self, alpha, beta, mmin, mmax, lam, mpp,
+                                   sigpp, alpha_chi, beta_chi, a_max=1):
+        probability = (
+            self.first_generation_mass_ratio(
+                alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
+                sigpp=sigpp) *
+            first_generation_spin_magnitude(
+                self.branching_dataset["a_1"],
+                alpha=alpha_chi, beta=beta_chi, a_max=a_max) *
+            first_generation_spin_magnitude(
+                self.branching_dataset["a_2"],
+                alpha=alpha_chi, beta=beta_chi, a_max=a_max)
+        )
+        branching_fraction = trapz(trapz(trapz(
+            probability * self.branching_dataset["interpolated_retention_fraction"],
+            self.mass_ratio), self.a_2), self.a_1)
+        return branching_fraction
+
+    def first_generation_mass_ratio(
+            self, alpha, beta, mmin, mmax, lam, mpp, sigpp):
+        first_generation_mass = two_component_primary_mass_ratio(
+            dataset=self.first_generation_data,
+            alpha=alpha,
+            beta=beta,
+            mmin=mmin,
+            mmax=mmax,
+            lam=lam,
+            mpp=mpp,
+            sigpp=sigpp,
+        )
+        first_generation_mass_ratio = trapz(first_generation_mass, self.mass_1s)
+        return xp.atleast_3d(first_generation_mass_ratio)
+
+
+def first_generation_spin_magnitude(spin, alpha, beta, a_max):
+    fraction_equal_zero = xp.mean(spin == 0)
+    return (
+        fraction_equal_zero +
+        (1 - fraction_equal_zero) *
+        beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
     )
 
 
@@ -154,7 +239,9 @@ def two_component_primary_mass_ratio_dynamical(
         The default value comes from a conversation with Eric Thrane.
     """
     branch_0 = 1 - branch_1 - branch_2
-    assert branch_0 >= 0, "Branching fractions greater than 1."
+    if branch_0 < 0:
+        return np.zeros_like(dataset["mass_1"])
+    # assert branch_0 >= 0, "Branching fractions greater than 1."
     first_generation = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
