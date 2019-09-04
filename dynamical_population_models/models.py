@@ -166,17 +166,6 @@ class BigModel(object):
                 self.branching_dataset["a_2"],
                 alpha=alpha_chi, beta=beta_chi, a_max=a_max)
         )
-        probability = (
-            self.first_generation_mass_ratio(
-                alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
-                sigpp=sigpp) *
-            first_generation_spin_magnitude(
-                self.branching_dataset["a_1"],
-                alpha=alpha_chi, beta=beta_chi, a_max=a_max) *
-            first_generation_spin_magnitude(
-                self.branching_dataset["a_2"],
-                alpha=alpha_chi, beta=beta_chi, a_max=a_max)
-        )
         branching_fraction = trapz(trapz(trapz(
             probability * self.branching_dataset["interpolated_retention_fraction"],
             self.mass_ratio), self.a_2), self.a_1)
