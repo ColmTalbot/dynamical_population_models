@@ -121,14 +121,14 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
 class BigModel(object):
 
     def __init__(self, branching_dataset):
-        self.a_1 = xp.asarray(branching_dataset["a_1"])
-        self.a_2 = xp.asarray(branching_dataset["a_2"])
-        self.mass_ratio = xp.asarray(branching_dataset["mass_ratio"])
+        self.a_1_array = xp.asarray(branching_dataset["a_1"])
+        self.a_2_array = xp.asarray(branching_dataset["a_2"])
+        self.mass_ratio_array = xp.asarray(branching_dataset["mass_ratio"])
         self.retention_fraction = xp.asarray(
             branching_dataset["interpolated_retention_fraction"])
         self.mass_1s = xp.linspace(2, 100, 1000)
         self.mass_ratio_grid, self.mass_1_grid = xp.meshgrid(
-            self.mass_ratio, self.mass_1s)
+            self.mass_ratio_array, self.mass_1s)
         self.first_generation_data = dict(
             mass_1=self.mass_1_grid, mass_ratio=self.mass_ratio_grid)
 
@@ -161,15 +161,13 @@ class BigModel(object):
                 alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
                 sigpp=sigpp),
             first_generation_spin_magnitude(
-                self.branching_dataset["a_1"],
-                alpha=alpha_chi, beta=beta_chi, a_max=a_max),
+                self.a_1_array, alpha=alpha_chi, beta=beta_chi, a_max=a_max),
             first_generation_spin_magnitude(
-                self.branching_dataset["a_2"],
-                alpha=alpha_chi, beta=beta_chi, a_max=a_max)
+                self.a_2_array, alpha=alpha_chi, beta=beta_chi, a_max=a_max)
         )
         branching_fraction = trapz(trapz(trapz(
             probability * self.retention_fraction,
-            self.mass_ratio), self.a_2), self.a_1)
+            self.mass_ratio_array), self.a_2_array), self.a_1_array)
         return branching_fraction
 
     def first_generation_mass_ratio(
