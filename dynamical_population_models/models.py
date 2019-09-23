@@ -120,7 +120,7 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     )
 
 
-class BigModel(object):
+class EmpiricalBranchingFraction(object):
 
     def __init__(self):
         branching_dataset = np.load(
@@ -186,6 +186,31 @@ class BigModel(object):
         return trapz(first_generation_mass, self.mass_1s, axis=0)
 
 
+BigModel = EmpiricalBranchingFraction
+
+
+class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
+
+    def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
+                 alpha_chi, beta_chi):
+        branching_fraction = self.compute_branching_fraction(
+            alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
+            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi
+        )
+        return two_component_primary_mass_ratio_dynamical_without_spins(
+            dataset=self.first_generation_data,
+            alpha=alpha,
+            beta=beta,
+            mmin=mmin,
+            mmax=mmax,
+            lam=lam,
+            mpp=mpp,
+            sigpp=sigpp,
+            branch_1=2 / 3 * branching_fraction,
+            branch_2=branching_fraction**2 / 4
+        )
+
+
 def first_generation_spin_magnitude(spin, alpha, beta, a_max):
     fraction_equal_zero = xp.mean(spin == 0)
     return (
@@ -195,7 +220,7 @@ def first_generation_spin_magnitude(spin, alpha, beta, a_max):
     )
 
 
-def two_component_primary_mass_ratio_dynamical(
+def two_component_primary_mass_ratio_dynamical_without_spins(
     dataset,
     alpha,
     beta,
