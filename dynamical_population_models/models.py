@@ -98,7 +98,7 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
                 dataset["a_2"], alpha=alpha_chi, beta=beta_chi, a_max=1)
     )
 
-    alpha_2g, beta_2g = mu_chi_var_chi_max_to_alpha_beta_max(
+    alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
         mu_chi=0.67, var_chi=0.1, amax=1
     )
 
@@ -198,7 +198,7 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi
         )
         return two_component_primary_mass_ratio_dynamical_without_spins(
-            dataset=self.first_generation_data,
+            dataset=dataset,
             alpha=alpha,
             beta=beta,
             mmin=mmin,
