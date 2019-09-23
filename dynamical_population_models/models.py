@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from gwpopulation.conversions import mu_chi_var_chi_max_to_alpha_beta_max
@@ -120,10 +122,13 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
 
 class BigModel(object):
 
-    def __init__(self, branching_dataset):
-        self.a_1_array = xp.asarray(branching_dataset["a_1"])
-        self.a_2_array = xp.asarray(branching_dataset["a_2"])
-        self.mass_ratio_array = xp.asarray(branching_dataset["mass_ratio"])
+    def __init__(self):
+        branching_dataset = np.load(
+            os.path.join(os.path.dirname(__file__), 'grid_dict'),
+            allow_pickle=True, encoding="bytes")
+        self.a_1_array = xp.asarray(branching_dataset["a1"])
+        self.a_2_array = xp.asarray(branching_dataset["a2"])
+        self.mass_ratio_array = xp.asarray(branching_dataset["q"])
         self.retention_fraction = xp.asarray(
             branching_dataset["interpolated_retention_fraction"])
         self.mass_1s = xp.linspace(2, 100, 1000)

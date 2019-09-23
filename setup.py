@@ -71,7 +71,7 @@ setup(name='dynamical_population_models',
       version=VERSION,
       packages=find_packages(exclude=["test"]),
       package_dir={'dynamical_population_models': 'dynamical_population_models'},
-      package_data={'dynamical_population_models': [version_file]},
+      package_data={'dynamical_population_models': [version_file, "grid_dict"]},
       install_requires=['bilby', 'gwpopulation', 'numpy'],
       classifiers=[
           "Programming Language :: Python :: 3.6",
