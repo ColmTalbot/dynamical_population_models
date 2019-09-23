@@ -168,6 +168,7 @@ class BigModel(object):
         branching_fraction = trapz(trapz(trapz(
             probability * self.retention_fraction,
             self.mass_ratio_array), self.a_2_array), self.a_1_array)
+        branching_fraction = min(branching_fraction, 1)
         return branching_fraction
 
     def first_generation_mass_ratio(
@@ -177,7 +178,7 @@ class BigModel(object):
             alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
             sigpp=sigpp,
         )
-        return trapz(first_generation_mass, self.mass_1s)
+        return trapz(first_generation_mass, self.mass_1s, axis=0)
 
 
 def first_generation_spin_magnitude(spin, alpha, beta, a_max):
