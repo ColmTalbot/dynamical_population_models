@@ -26,7 +26,6 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     delta_chi,
     branch_1=0.12,
     branch_2=0.01,
-
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
@@ -63,7 +62,6 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     branch_2: float
         Fraction of 2nd generation mergers.
         The default value comes from a conversation with Eric Thrane.
-
     """
     branch_0 = 1 - branch_1 - branch_2
     assert branch_0 >= 0, "Branching fractions greater than 1."
@@ -143,10 +141,10 @@ class EmpiricalBranchingFraction(object):
             mass_1=self.mass_1_grid, mass_ratio=self.mass_ratio_grid)
 
     def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
-                 alpha_chi, beta_chi):
+                 alpha_chi, beta_chi, delta_chi):
         branching_fraction = self.compute_branching_fraction(
             alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
-            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi
+            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi, delta_chi=delta_chi
         )
         return two_component_primary_mass_ratio_dynamical_with_spins(
             dataset=dataset,
@@ -159,6 +157,7 @@ class EmpiricalBranchingFraction(object):
             sigpp=sigpp,
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
+            delta_chi=delta_chi,
             branch_1=2 / 3 * branching_fraction,
             branch_2=branching_fraction**2 / 4
         )
@@ -287,7 +286,6 @@ def two_component_primary_mass_ratio_dynamical_without_spins(
         lam=lam,
         mpp=mpp,
         sigpp=sigpp,
-        delta=delta,
     )
     params = dict(
         mmin=mmin * 2, mmax=mmax * 2, lam=lam, mpp=mpp * 2, sigpp=sigpp * 2
