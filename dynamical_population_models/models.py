@@ -23,8 +23,10 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     sigpp,
     alpha_chi,
     beta_chi,
+    delta_chi,
     branch_1=0.12,
     branch_2=0.01,
+
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
@@ -53,12 +55,15 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
         Mean of the Gaussian component.
     sigpp: float
         Standard deviation fo the Gaussian component.
+    delta_chi: float
+        Fraction of black holes in the low spin component
     branch_1: float
         Fraction of 1.5 generation mergers.
         The default value comes from a conversation with Eric Thrane.
     branch_2: float
         Fraction of 2nd generation mergers.
         The default value comes from a conversation with Eric Thrane.
+
     """
     branch_0 = 1 - branch_1 - branch_2
     assert branch_0 >= 0, "Branching fractions greater than 1."
@@ -93,9 +98,9 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
 
     first_generation_spin = (
             first_generation_spin_magnitude(
-                dataset["a_1"], alpha=alpha_chi, beta=beta_chi, a_max=1) *
+                dataset["a_1"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1) *
             first_generation_spin_magnitude(
-                dataset["a_2"], alpha=alpha_chi, beta=beta_chi, a_max=1)
+                dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
     )
 
     alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
@@ -105,7 +110,7 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     one_point_five_generation_spin = beta_dist(
         dataset["a_1"], scale=1, alpha=alpha_2g, beta=beta_2g
     ) * first_generation_spin_magnitude(
-        dataset["a_2"], alpha=alpha_chi, beta=beta_chi, a_max=1)
+        dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
 
     second_generation_spin = iid_spin_magnitude_beta(
         dataset=dataset, alpha_chi=alpha_2g, beta_chi=beta_2g, amax=1
@@ -159,16 +164,16 @@ class EmpiricalBranchingFraction(object):
         )
 
     def compute_branching_fraction(self, alpha, beta, mmin, mmax, lam, mpp,
-                                   sigpp, alpha_chi, beta_chi, a_max=1):
+                                   sigpp, alpha_chi, beta_chi, delta_chi, a_max=1):
         probability = xp.einsum(
             "i,j,k->ijk",
             self.first_generation_mass_ratio(
                 alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
                 sigpp=sigpp),
             first_generation_spin_magnitude(
-                self.a_1_array, alpha=alpha_chi, beta=beta_chi, a_max=a_max),
+                self.a_1_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max),
             first_generation_spin_magnitude(
-                self.a_2_array, alpha=alpha_chi, beta=beta_chi, a_max=a_max)
+                self.a_2_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max)
         )
         branching_fraction = trapz(trapz(trapz(
             probability * self.retention_fraction,
@@ -210,12 +215,15 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             branch_2=branching_fraction**2 / 4
         )
 
+def low_spin_component(spin):
+    return xp.piecewise(spin, [spin<=0.01, spin>0.01], [1/0.01, 0])
+    # alternatively, delta function:
+    # xp.piecewise(spin, [spin == 0, spin != 0], [1.0, 0])
 
-def first_generation_spin_magnitude(spin, alpha, beta, a_max):
-    fraction_equal_zero = xp.mean(spin == 0)
+def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
     return (
-        fraction_equal_zero +
-        (1 - fraction_equal_zero) *
+        delta * low_spin_component(spin) +
+        (1 - delta) *
         beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
     )
 
@@ -279,6 +287,7 @@ def two_component_primary_mass_ratio_dynamical_without_spins(
         lam=lam,
         mpp=mpp,
         sigpp=sigpp,
+        delta=delta,
     )
     params = dict(
         mmin=mmin * 2, mmax=mmax * 2, lam=lam, mpp=mpp * 2, sigpp=sigpp * 2
