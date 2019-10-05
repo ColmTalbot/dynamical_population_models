@@ -65,6 +65,66 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     """
     branch_0 = 1 - branch_1 - branch_2
     assert branch_0 >= 0, "Branching fractions greater than 1."
+
+    first_generation = first_generation_mass_spin(
+        dataset=dataset,
+        alpha=alpha,
+        beta=beta,
+        mmin=mmin,
+        mmax=mmax,
+        lam=lam,
+        mpp=mpp,
+        sigpp=sigpp,
+        alpha_chi=alpha_chi,
+        beta_chi=beta_chi,
+        delta_chi=delta_chi
+    )
+
+    one_point_five_generation = one_point_five_generation_mass_spin(
+        dataset=dataset,
+        alpha=alpha,
+        beta=beta,
+        mmin=mmin,
+        mmax=mmax,
+        lam=lam,
+        mpp=mpp,
+        sigpp=sigpp,
+        alpha_chi=alpha_chi,
+        beta_chi=beta_chi,
+        delta_chi=delta_chi
+    )
+
+    second_generation = second_generation_mass_spin(
+        dataset=dataset,
+        alpha=alpha,
+        beta=beta,
+        mmin=mmin,
+        mmax=mmax,
+        lam=lam,
+        mpp=mpp,
+        sigpp=sigpp
+    )
+
+    return (
+        branch_0 * first_generation
+        + branch_1
+        * one_point_five_generation
+        + branch_2 * second_generation
+    )
+
+def first_generation_mass_spin(
+        dataset,
+        alpha,
+        beta,
+        mmin,
+        mmax,
+        lam,
+        mpp,
+        sigpp,
+        alpha_chi,
+        beta_chi,
+        delta_chi
+):
     first_generation_mass = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
@@ -75,14 +135,64 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
         mpp=mpp,
         sigpp=sigpp,
     )
+    first_generation_spin = (
+            first_generation_spin_magnitude(
+                dataset["a_1"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1) *
+            first_generation_spin_magnitude(
+                dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
+    )
+    return first_generation_mass * first_generation_spin
+
+def one_point_five_generation_mass_spin(
+        dataset,
+        alpha,
+        beta,
+        mmin,
+        mmax,
+        lam,
+        mpp,
+        sigpp,
+        alpha_chi,
+        beta_chi,
+        delta_chi
+):
     params = dict(
         mmin=mmin * 2, mmax=mmax * 2, lam=lam, mpp=mpp * 2, sigpp=sigpp * 2
     )
+
     one_point_five_generation_mass = two_component_single(
         dataset["mass_1"], alpha=alpha, **params
     ) * one_point_five_generation_mass_ratio(
         dataset, spectal_index=beta * 1.5, mmin=mmin
     )
+
+    alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
+        mu_chi=0.67, var_chi=0.1, amax=1
+    )
+
+    one_point_five_generation_spin = beta_dist(
+        dataset["a_1"], scale=1, alpha=alpha_2g, beta=beta_2g
+    ) * first_generation_spin_magnitude(
+        dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1
+    )
+
+    return one_point_five_generation_mass * one_point_five_generation_spin
+
+def second_generation_mass_spin(
+        dataset,
+        alpha,
+        beta,
+        mmin,
+        mmax,
+        lam,
+        mpp,
+        sigpp,
+
+):
+    params = dict(
+        mmin=mmin * 2, mmax=mmax * 2, lam=lam, mpp=mpp * 2, sigpp=sigpp * 2
+    )
+
     second_generation_mass = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
@@ -94,34 +204,15 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
         sigpp=sigpp * 2,
     )
 
-    first_generation_spin = (
-            first_generation_spin_magnitude(
-                dataset["a_1"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1) *
-            first_generation_spin_magnitude(
-                dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
-    )
-
     alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
         mu_chi=0.67, var_chi=0.1, amax=1
     )
-
-    one_point_five_generation_spin = beta_dist(
-        dataset["a_1"], scale=1, alpha=alpha_2g, beta=beta_2g
-    ) * first_generation_spin_magnitude(
-        dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
 
     second_generation_spin = iid_spin_magnitude_beta(
         dataset=dataset, alpha_chi=alpha_2g, beta_chi=beta_2g, amax=1
     )
 
-    return (
-        branch_0 * first_generation_mass * first_generation_spin
-        + branch_1
-        * one_point_five_generation_mass
-        * one_point_five_generation_spin
-        + branch_2 * second_generation_mass * second_generation_spin
-    )
-
+    return second_generation_mass * second_generation_spin
 
 class EmpiricalBranchingFraction(object):
 
@@ -196,10 +287,11 @@ BigModel = EmpiricalBranchingFraction
 class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
 
     def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
-                 alpha_chi, beta_chi):
+                 alpha_chi, beta_chi, delta_chi):
+
         branching_fraction = self.compute_branching_fraction(
             alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
-            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi
+            sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi, delta_chi=delta_chi
         )
         return two_component_primary_mass_ratio_dynamical_without_spins(
             dataset=dataset,
@@ -215,9 +307,7 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
         )
 
 def low_spin_component(spin):
-    return xp.piecewise(spin, [spin<=0.01, spin>0.01], [1/0.01, 0])
-    # alternatively, delta function:
-    # xp.piecewise(spin, [spin == 0, spin != 0], [1.0, 0])
+    return powerlaw(spin,-5,.05,0)
 
 def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
     return (
