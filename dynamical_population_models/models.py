@@ -307,7 +307,7 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
         )
 
 def low_spin_component(spin):
-    return powerlaw(spin,-5,.05,0)
+    return powerlaw(spin,-1.5,1.0, 1e-6)
 
 def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
     return (
