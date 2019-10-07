@@ -13,19 +13,19 @@ from gwpopulation.models.spin import iid_spin_magnitude_beta
 
 
 def two_component_primary_mass_ratio_dynamical_with_spins(
-    dataset,
-    alpha,
-    beta,
-    mmin,
-    mmax,
-    lam,
-    mpp,
-    sigpp,
-    alpha_chi,
-    beta_chi,
-    delta_chi,
-    branch_1=0.12,
-    branch_2=0.01,
+        dataset,
+        alpha,
+        beta,
+        mmin,
+        mmax,
+        lam,
+        mpp,
+        sigpp,
+        alpha_chi,
+        beta_chi,
+        delta_chi,
+        branch_1=0.12,
+        branch_2=0.01,
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
@@ -57,14 +57,18 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     delta_chi: float
         Fraction of black holes in the low spin component
     branch_1: float
-        Fraction of 1.5 generation mergers.
+        Ratio of 1.5 generation mergers to 1st generation mergers.
         The default value comes from a conversation with Eric Thrane.
     branch_2: float
-        Fraction of 2nd generation mergers.
+        ratio of 2nd generation mergers to 1st generation mergers.
         The default value comes from a conversation with Eric Thrane.
     """
-    branch_0 = 1 - branch_1 - branch_2
-    assert branch_0 >= 0, "Branching fractions greater than 1."
+    btot = 1 + branch_1 + branch_2
+
+    fraction_1_5 = branch_1 / btot
+    fraction_2 = branch_2 / btot
+    fraction_1 = 1 - fraction_1_5 - fraction_2
+    assert fraction_1 >= 0, "Branching fractions greater than 1."
 
     first_generation = first_generation_mass_spin(
         dataset=dataset,
@@ -106,11 +110,12 @@ def two_component_primary_mass_ratio_dynamical_with_spins(
     )
 
     return (
-        branch_0 * first_generation
-        + branch_1
-        * one_point_five_generation
-        + branch_2 * second_generation
+            fraction_1 * first_generation
+            + fraction_1_5
+            * one_point_five_generation
+            + fraction_2 * second_generation
     )
+
 
 def first_generation_mass_spin(
         dataset,
@@ -142,6 +147,7 @@ def first_generation_mass_spin(
                 dataset["a_2"], alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=1)
     )
     return first_generation_mass * first_generation_spin
+
 
 def one_point_five_generation_mass_spin(
         dataset,
@@ -177,6 +183,7 @@ def one_point_five_generation_mass_spin(
     )
 
     return one_point_five_generation_mass * one_point_five_generation_spin
+
 
 def second_generation_mass_spin(
         dataset,
@@ -214,6 +221,7 @@ def second_generation_mass_spin(
 
     return second_generation_mass * second_generation_spin
 
+
 class EmpiricalBranchingFraction(object):
 
     def __init__(self):
@@ -233,7 +241,7 @@ class EmpiricalBranchingFraction(object):
 
     def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
                  alpha_chi, beta_chi, delta_chi):
-        branching_fraction = self.compute_branching_fraction(
+        branching_ratio = self.compute_branching_ratio(
             alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
             sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi, delta_chi=delta_chi
         )
@@ -249,12 +257,12 @@ class EmpiricalBranchingFraction(object):
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
             delta_chi=delta_chi,
-            branch_1=2 / 3 * branching_fraction,
-            branch_2=branching_fraction**2 / 4
+            branch_1=2 / 3 * branching_ratio,
+            branch_2=branching_ratio ** 2 / 4
         )
 
-    def compute_branching_fraction(self, alpha, beta, mmin, mmax, lam, mpp,
-                                   sigpp, alpha_chi, beta_chi, delta_chi, a_max=1):
+    def compute_branching_ratio(self, alpha, beta, mmin, mmax, lam, mpp,
+                                sigpp, alpha_chi, beta_chi, delta_chi, a_max=1):
         probability = xp.einsum(
             "i,j,k->ijk",
             self.first_generation_mass_ratio(
@@ -265,11 +273,11 @@ class EmpiricalBranchingFraction(object):
             first_generation_spin_magnitude(
                 self.a_2_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max)
         )
-        branching_fraction = trapz(trapz(trapz(
+        branching_ratio = trapz(trapz(trapz(
             probability * self.retention_fraction,
             self.mass_ratio_array), self.a_2_array), self.a_1_array)
-        branching_fraction = min(branching_fraction, 1)
-        return branching_fraction
+        branching_ratio = min(branching_ratio, 1)
+        return branching_ratio
 
     def first_generation_mass_ratio(
             self, alpha, beta, mmin, mmax, lam, mpp, sigpp):
@@ -288,8 +296,7 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
 
     def __call__(self, dataset, alpha, beta, mmin, mmax, lam, mpp, sigpp,
                  alpha_chi, beta_chi, delta_chi):
-
-        branching_fraction = self.compute_branching_fraction(
+        branching_ratio = self.compute_branching_ratio(
             alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
             sigpp=sigpp, alpha_chi=alpha_chi, beta_chi=beta_chi, delta_chi=delta_chi
         )
@@ -302,32 +309,34 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
-            branch_1=2 / 3 * branching_fraction,
-            branch_2=branching_fraction**2 / 4
+            branch_1=2 / 3 * branching_ratio,
+            branch_2=branching_ratio ** 2 / 4
         )
 
+
 def low_spin_component(spin):
-    return (spin<=0.05).astype(float)/0.05
+    return (spin >= 0.05).astype(float) / 0.05
+
 
 def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
     return (
-        delta * low_spin_component(spin) +
-        (1 - delta) *
-        beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
+            delta * low_spin_component(spin) +
+            (1 - delta) *
+            beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
     )
 
 
 def two_component_primary_mass_ratio_dynamical_without_spins(
-    dataset,
-    alpha,
-    beta,
-    mmin,
-    mmax,
-    lam,
-    mpp,
-    sigpp,
-    branch_1=0.12,
-    branch_2=0.01,
+        dataset,
+        alpha,
+        beta,
+        mmin,
+        mmax,
+        lam,
+        mpp,
+        sigpp,
+        branch_1=0.12,
+        branch_2=0.01,
 ):
     """
     Power law model for two-dimensional mass distribution, modelling primary
@@ -357,14 +366,19 @@ def two_component_primary_mass_ratio_dynamical_without_spins(
     sigpp: float
         Standard deviation fo the Gaussian component.
     branch_1: float
-        Fraction of 1.5 generation mergers.
+        Ratio of 1.5 generation mergers to 1st generation mergers.
         The default value comes from a conversation with Eric Thrane.
     branch_2: float
-        Fraction of 2nd generation mergers.
+        Ratio of 2nd generation mergers to 1st generation mergers.
         The default value comes from a conversation with Eric Thrane.
     """
-    branch_0 = 1 - branch_1 - branch_2
-    if branch_0 < 0:
+    btot = 1 + branch_1 + branch_2
+
+    fraction_1_5 = branch_1 / btot
+    fraction_2 = branch_2 / btot
+    fraction_1 = 1 - fraction_1_5 - fraction_2
+
+    if fraction_1 < 0:
         return np.zeros_like(dataset["mass_1"])
     # assert branch_0 >= 0, "Branching fractions greater than 1."
     first_generation = two_component_primary_mass_ratio(
@@ -396,28 +410,28 @@ def two_component_primary_mass_ratio_dynamical_without_spins(
         sigpp=sigpp * 2,
     )
     return (
-        branch_0 * first_generation
-        + branch_1 * one_point_five_generation
-        + branch_2 * second_generation
+            fraction_1 * first_generation
+            + fraction_1_5 * one_point_five_generation
+            + fraction_2 * second_generation
     )
 
 
 def one_point_five_generation_mass_ratio(dataset, spectal_index, mmin):
     split = (1 + mmin / dataset["mass_1"]) / 2
     prob = (
-        powerlaw(
-            dataset["mass_ratio"],
-            spectal_index,
-            high=split,
-            low=mmin / dataset["mass_1"],
-        )
-        * (dataset["mass_ratio"] <= split)
-        + powerlaw(
-            1 - dataset["mass_ratio"],
-            spectal_index,
-            high=split,
-            low=mmin / dataset["mass_1"],
-        )
-        * (dataset["mass_ratio"] >= split)
-    ) / 2
+                   powerlaw(
+                       dataset["mass_ratio"],
+                       spectal_index,
+                       high=split,
+                       low=mmin / dataset["mass_1"],
+                   )
+                   * (dataset["mass_ratio"] <= split)
+                   + powerlaw(
+               1 - dataset["mass_ratio"],
+               spectal_index,
+               high=split,
+               low=mmin / dataset["mass_1"],
+           )
+                   * (dataset["mass_ratio"] >= split)
+           ) / 2
     return prob
