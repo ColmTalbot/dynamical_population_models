@@ -273,6 +273,7 @@ class EmpiricalBranchingFraction(object):
             first_generation_spin_magnitude(
                 self.a_2_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max)
         )
+        probability[np.isinf(probability)] = 0
         branching_ratio = trapz(trapz(trapz(
             probability * self.retention_fraction,
             self.mass_ratio_array), self.a_2_array), self.a_1_array)
