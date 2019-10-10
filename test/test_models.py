@@ -6,7 +6,7 @@ from bilby.core.prior import Uniform, PriorDict
 
 from gwpopulation.cupy_utils import xp
 
-from dynamical_population_models.models import two_component_primary_mass_ratio_dynamical
+from dynamical_population_models.models import two_component_primary_mass_ratio_dynamical_without_spins
 
 
 class TestPrimaryMassRatio(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestPrimaryMassRatio(unittest.TestCase):
             branch_1=0.12,
             branch_2=0.01
         )
-        prob = two_component_primary_mass_ratio_dynamical(
+        prob = two_component_primary_mass_ratio_dynamical_without_spins(
             dataset=self.dataset, **parameters)
         self.assertTrue(all(
             prob[self.dataset["mass_1"] * self.dataset["mass_ratio"] <=
