@@ -130,7 +130,6 @@ def first_generation_mass_spin(
         beta_chi,
         delta_chi
 ):
-    two_component_primary_mass_ratio
     first_generation_mass = two_component_primary_mass_ratio(
         dataset=dataset,
         alpha=alpha,
