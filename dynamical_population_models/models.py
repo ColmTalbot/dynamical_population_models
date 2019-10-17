@@ -173,7 +173,7 @@ def one_point_five_generation_mass_spin(
     )
 
     alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
-        mu_chi=0.67, var_chi=0.1, amax=1
+        mu_chi=0.67, var_chi=0.01, amax=1
     )
 
     one_point_five_generation_spin = beta_dist(
@@ -212,7 +212,7 @@ def second_generation_mass_spin(
     )
 
     alpha_2g, beta_2g, _ = mu_chi_var_chi_max_to_alpha_beta_max(
-        mu_chi=0.67, var_chi=0.1, amax=1
+        mu_chi=0.67, var_chi=0.01, amax=1
     )
 
     second_generation_spin = iid_spin_magnitude_beta(
