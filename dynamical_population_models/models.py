@@ -316,10 +316,11 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
 
 
 def low_spin_component(spin):
-    return DeltaFunction(peak=0.0).prob(spin)
+    return np.array(spin == 0).astype(float)
 
 def low_spin_component_grid(spin):
-    return DeltaFunction(peak=0.0).prob(spin)/trapz(DeltaFunction(peak=0.0).prob(spin),spin)
+    delta = np.array(spin == 0).astype(float)
+    return delta/trapz(delta,spin)
 
 
 
