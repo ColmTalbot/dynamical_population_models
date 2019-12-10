@@ -11,7 +11,7 @@ from gwpopulation.models.mass import (
 )
 from gwpopulation.models.spin import iid_spin_magnitude_beta
 from bilby.core.prior import DeltaFunction
-
+Pbin=0.5
 def two_component_primary_mass_ratio_dynamical_with_spins(
         dataset,
         alpha,
@@ -257,8 +257,8 @@ class EmpiricalBranchingFraction(object):
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
             delta_chi=delta_chi,
-            branch_1=2 / 3 * branching_ratio,
-            branch_2=branching_ratio ** 2 / 4
+            branch_1=Pbin*branching_ratio,
+            branch_2=((Pbin*branching_ratio) ** 2) / (4*(1-Pbin))
         )
 
     def compute_branching_ratio(self, alpha, beta, mmin, mmax, lam, mpp,
@@ -310,8 +310,8 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
-            branch_1=2 / 3 * branching_ratio,
-            branch_2=branching_ratio ** 2 / 4
+            branch_1=Pbin*branching_ratio,
+            branch_2=((Pbin*branching_ratio) ** 2)/(4*(1-Pbin))
         )
 
 
