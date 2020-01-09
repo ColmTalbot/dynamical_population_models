@@ -10,8 +10,8 @@ from gwpopulation.models.mass import (
     two_component_single,
 )
 from gwpopulation.models.spin import iid_spin_magnitude_beta
-
-
+from bilby.core.prior import DeltaFunction
+Pbin=0.5
 def two_component_primary_mass_ratio_dynamical_with_spins(
         dataset,
         alpha,
@@ -257,20 +257,21 @@ class EmpiricalBranchingFraction(object):
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
             delta_chi=delta_chi,
-            branch_1=2 / 3 * branching_ratio,
-            branch_2=branching_ratio ** 2 / 4
+            branch_1=Pbin*branching_ratio,
+            branch_2=((Pbin*branching_ratio) ** 2) / (4*(1-Pbin))
         )
 
     def compute_branching_ratio(self, alpha, beta, mmin, mmax, lam, mpp,
                                 sigpp, alpha_chi, beta_chi, delta_chi, a_max=1):
+
         probability = xp.einsum(
             "i,j,k->ijk",
             self.first_generation_mass_ratio(
                 alpha=alpha, beta=beta, mmin=mmin, mmax=mmax, lam=lam, mpp=mpp,
                 sigpp=sigpp),
-            first_generation_spin_magnitude(
+            first_generation_spin_magnitude_grid(
                 self.a_1_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max),
-            first_generation_spin_magnitude(
+            first_generation_spin_magnitude_grid(
                 self.a_2_array, alpha=alpha_chi, beta=beta_chi, delta=delta_chi, a_max=a_max)
         )
         probability[np.isinf(probability)] = 0
@@ -310,13 +311,18 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
-            branch_1=2 / 3 * branching_ratio,
-            branch_2=branching_ratio ** 2 / 4
+            branch_1=Pbin*branching_ratio,
+            branch_2=((Pbin*branching_ratio) ** 2)/(4*(1-Pbin))
         )
 
 
 def low_spin_component(spin):
-    return (spin <= 0.05).astype(float) / 0.05
+    return xp.asarray(spin == 0).astype(float)
+
+def low_spin_component_grid(spin):
+    delta = xp.asarray(spin == 0).astype(float)
+    return delta/trapz(delta,spin)
+
 
 
 def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
@@ -325,7 +331,12 @@ def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
             (1 - delta) *
             beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
     )
-
+def first_generation_spin_magnitude_grid(spin, alpha, beta, delta, a_max):
+    return (
+            delta * low_spin_component_grid(spin) +
+            (1 - delta) *
+            beta_dist(xx=spin, alpha=alpha, beta=beta, scale=a_max)
+    )
 
 def two_component_primary_mass_ratio_dynamical_without_spins(
         dataset,
