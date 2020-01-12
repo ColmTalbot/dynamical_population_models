@@ -11,6 +11,7 @@ from gwpopulation.models.mass import (
 )
 from gwpopulation.models.spin import iid_spin_magnitude_beta
 
+NAN_INF = xp.nan_to_num(xp.inf)
 Pbin = 0.5
 
 
@@ -326,7 +327,6 @@ class EmpiricalBranchingFraction(object):
                 a_max=a_max,
             ),
         )
-        probability[np.isinf(probability)] = 0
         branching_ratio = trapz(
             trapz(
                 trapz(
@@ -410,15 +410,19 @@ def low_spin_component_grid(spin):
 
 
 def first_generation_spin_magnitude(spin, alpha, beta, delta, a_max):
-    return delta * low_spin_component(spin) + (1 - delta) * beta_dist(
+    beta_component = beta_dist(
         xx=spin, alpha=alpha, beta=beta, scale=a_max
     )
+    beta_component[beta_component == NAN_INF] = 0
+    return delta * low_spin_component(spin) + (1 - delta) * beta_component
 
 
 def first_generation_spin_magnitude_grid(spin, alpha, beta, delta, a_max):
-    return delta * low_spin_component_grid(spin) + (1 - delta) * beta_dist(
+    beta_component = beta_dist(
         xx=spin, alpha=alpha, beta=beta, scale=a_max
     )
+    beta_component[beta_component == NAN_INF] = 0
+    return delta * low_spin_component_grid(spin) + (1 - delta) * beta_component
 
 
 def two_component_primary_mass_ratio_dynamical_without_spins(
