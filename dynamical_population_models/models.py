@@ -233,7 +233,7 @@ class EmpiricalBranchingFraction(object):
         self.mass_ratio_array = xp.asarray(branching_dataset["q"])
         self.retention_fraction = xp.asarray(
             branching_dataset["interpolated_retention_fraction"])
-        self.mass_1s = xp.linspace(2, 100, 1000)
+        self.mass_1s = xp.linspace(2, 200, 2000)
         self.mass_ratio_grid, self.mass_1_grid = xp.meshgrid(
             self.mass_ratio_array, self.mass_1s)
         self.first_generation_data = dict(
