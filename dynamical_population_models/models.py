@@ -12,7 +12,6 @@ from gwpopulation.models.mass import (
 from gwpopulation.models.spin import iid_spin_magnitude_beta
 
 NAN_INF = xp.nan_to_num(xp.inf)
-Pbin = 0.5
 
 
 def two_component_primary_mass_ratio_dynamical_with_spins(
@@ -281,8 +280,8 @@ class EmpiricalBranchingFraction(object):
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
             delta_chi=delta_chi,
-            branch_1=Pbin * branching_ratio,
-            branch_2=((Pbin * branching_ratio) ** 2) / (4 * (1 - Pbin)),
+            branch_1= 0.5 * branching_ratio,
+            branch_2= 0.125 * branching_ratio ** 2 
         )
 
     def compute_branching_ratio(
@@ -394,8 +393,8 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
-            branch_1=Pbin * branching_ratio,
-            branch_2=((Pbin * branching_ratio) ** 2) / (4 * (1 - Pbin)),
+            branch_1= 0.5 * branching_ratio,
+            branch_2= 0.125 * branching_ratio ** 2
         )
 
 
