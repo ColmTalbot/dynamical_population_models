@@ -280,8 +280,8 @@ class EmpiricalBranchingFraction(object):
             alpha_chi=alpha_chi,
             beta_chi=beta_chi,
             delta_chi=delta_chi,
-            branch_1=0.5 * branching_ratio,
-            branch_2=0.125 * branching_ratio** 2
+            branch_1= 0.5 * branching_ratio,
+            branch_2= 0.125 * branching_ratio ** 2 
         )
 
     def compute_branching_ratio(
@@ -393,8 +393,8 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             lam=lam,
             mpp=mpp,
             sigpp=sigpp,
-            branch_1=0.5 * branching_ratio,
-            branch_2=0.125 * branching_ratio ** 2,
+            branch_1= 0.5 * branching_ratio,
+            branch_2= 0.125 * branching_ratio ** 2
         )
 
 
