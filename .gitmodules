@@ -1,0 +1,3 @@
+[submodule "retention"]
+	path = retention
+	url = https://github.com/chase-kimball/retention.git
