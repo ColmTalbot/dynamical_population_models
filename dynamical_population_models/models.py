@@ -221,13 +221,13 @@ def second_generation_mass_spin(
 
     return second_generation_mass * second_generation_spin
 
-
 class EmpiricalBranchingFraction(object):
     def __init__(self):
+        self.retention_file = self.__retention_file__()
         branching_dataset = np.load(
-            os.path.join(os.path.dirname(__file__), "grid_dict"),
+            self.retention_file,
             allow_pickle=True,
-            encoding="bytes",
+            encoding="latin1",
         )
         self.a_1_array = xp.asarray(branching_dataset["a1"])
         self.a_2_array = xp.asarray(branching_dataset["a2"])
@@ -241,7 +241,8 @@ class EmpiricalBranchingFraction(object):
         self.first_generation_data = dict(
             mass_1=self.mass_1_grid, mass_ratio=self.mass_ratio_grid
         )
-
+    def __retention_file__(self):
+        return os.path.join(os.path.dirname(__file__), "grid_dict_5e5")
     def __call__(
         self,
         dataset,
@@ -354,9 +355,6 @@ class EmpiricalBranchingFraction(object):
         return trapz(first_generation_mass, self.mass_1s, axis=0)
 
 
-BigModel = EmpiricalBranchingFraction
-
-
 class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
     def __call__(
         self,
@@ -397,7 +395,22 @@ class EmpiricalBranchingFractionNoSpin(EmpiricalBranchingFraction):
             branch_2= 0.125 * branching_ratio ** 2
         )
 
+class EmpiricalBranchingFraction_1e7(EmpiricalBranchingFraction):
+    def __retention_file__(self):
+        return os.path.join(os.path.dirname(__file__), "grid_dict_1e7")
 
+class EmpiricalBranchingFraction_1e8(EmpiricalBranchingFraction):
+    def __retention_file__(self):
+        return os.path.join(os.path.dirname(__file__), "grid_dict_1e8")
+
+class EmpiricalBranchingFractionNoSpin_1e7(EmpiricalBranchingFractionNoSpin):
+    def __retention_file__(self):
+        return os.path.join(os.path.dirname(__file__), "grid_dict_1e7")
+
+class EmpiricalBranchingFractionNoSpin_1e8(EmpiricalBranchingFractionNoSpin):
+    def __retention_file__(self):
+        return os.path.join(os.path.dirname(__file__), "grid_dict_1e8")
+    
 def low_spin_component(spin):
     return xp.asarray(spin == 0).astype(float)
 
